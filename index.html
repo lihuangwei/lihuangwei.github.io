@@ -1,0 +1,262 @@
+<!--
+ * @Descripttion: 
+ * @Author: zsf
+ * @Date: 2019-06-13 10:17:53
+ * @LastEditors: voanit
+ * @LastEditTime: 2019-11-05 19:48:37
+ -->
+<!doctype html>
+<html lang="zh-cn">
+
+<head>
+  <meta name="viewport" content="initial-scale=1, user-scalable=0" charset="UTF-8">
+  <title id="titleshow"></title>
+  <!-- UC强制全屏 -->
+  <meta name="full-screen" content="yes">
+  <!-- QQ强制全屏 -->
+  <meta name="x5-fullscreen" content="true">
+</head>
+
+<body>
+  <div id="app" style="display:none">
+    接口列表:
+    <select name="type" v-model="apiType" @change="onApiChanged()">
+      <option>请选择</option>
+      <option v-for="item in apiArray" :value="item.id">{{item.title}}</option>
+    </select>
+    </br>
+
+    <form target="nm_iframe" id="params_form" @submit="submit()" action="">
+      <!--公用部分-->
+      <template v-if="apiType==='4.3'||apiType==='4.4'">
+        <p style="color: red">注：红色为必填字段</p>
+        <p id="p_amount" style='color: red;'> amount：<input id="amount" type=" number" v-model="amount"
+            placeholder=" 交易金额(参考请求内容)\t000000001000" style=" width:100%;" required /></p>
+        <p id="p_orderNumber"> orderNumber：<input id="orderNumber" v-model="orderNumber" type=" text"
+            placeholder="订单号(第三方自+定义不能超过30个字节)00000018" style=" width:100%;" /></p>
+      </template>
+      <!--4.4-->
+      <template v-if="apiType==='4.4'">
+        <p style="color: red">
+          isFrontCamera：是否打开前置摄像头(传true时，打开前置。传false不打开前置)
+          <input type="radio" name="isFrontCamera" v-model="isFrontCamera" value="true" />打开
+          <input type="radio" required name="isFrontCamera" v-model="isFrontCamera" value="false" />不打开
+        </p>
+        <p style="color: red">
+          isPrintTicket：为true时调用打印；为false时不调用打印
+          <input type="radio" name="isPrintTicket" v-model="isPrintTicket" value="true" />打印
+          <input type="radio" required name="isPrintTicket" v-model="isPrintTicket" value="false" />不打印
+        </p>
+      </template>
+
+      <template v-if="apiType&&apiType!='请选择'&&apiType!=='4.1'&&apiType!=='4.2'">
+        <input type="submit" value="确定" />
+      </template>
+    </form>
+    <iframe id="id_iframe" name="nm_iframe" style="display:none;"></iframe>
+    </br>
+    回调结果：<p id="result"></p>
+
+  </div>
+  <!-- jQuery1.7以上 或者 Zepto 二选一，不要同时都引用 -->
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script>
+    var app = new Vue({
+      el: '#app',
+      data: {
+        apiArray: [
+          {
+            title: '4.1 签到',
+            id: '4.1'
+          },
+          {
+            title: '4.2 签退',
+            id: '4.2'
+          },
+          {
+            title: '4.3 消费',
+            id: '4.3'
+          },
+          {
+            title: '4.4 支付宝支付',
+            id: '4.4'
+          },
+          {
+            title: '4.5 支付宝退款',
+            id: '4.5'
+          },
+          {
+            title: '4.6 支付宝末笔查询',
+            id: '4.6'
+          },
+          {
+            title: '4.7 消费撤销',
+            id: '4.7'
+          },
+          {
+            title: '4.8 结算',
+            id: '4.8'
+          },
+          {
+            title: '4.9 退货',
+            id: '4.9'
+          },
+          {
+            title: '4.10微信消费',
+            id: '4.10'
+          },
+          {
+            title: '4.11微信退款',
+            id: '4.11'
+          },
+          {
+            title: '4.12微信末笔查询',
+            id: '4.12'
+          },
+          {
+            title: '4.13余额查询',
+            id: '4.13'
+          },
+          {
+            title: '4.14交易查询',
+            id: '4.14'
+          },
+          {
+            title: '4.15打印任意一笔',
+            id: '4.15'
+          },
+          {
+            title: '4.16预授权完成撤销',
+            id: '4.16'
+          },
+          {
+            title: '4.17打印最后一笔',
+            id: '4.17'
+          },
+          {
+            title: '4.18系统管理',
+            id: '4.18'
+          },
+          {
+            title: '4.19终端参数',
+            id: '4.19'
+          },
+          {
+            title: '4.20预授权',
+            id: '4.20'
+          },
+          {
+            title: '4.21预授权撤销',
+            id: '4.21'
+          },
+          {
+            title: '4.22预授权完成',
+            id: '4.22'
+          },
+          {
+            title: '4.23订单查询接口',
+            id: '4.23'
+          },
+          {
+            title: '4.24单笔查询接口（在订单查询失败后，利用单笔查询查询数据）',
+            id: '4.24'
+          },
+          {
+            title: '4.25消费末笔查询',
+            id: '4.25'
+          },
+          {
+            title: '4.26联机交易查询（本地）',
+            id: '4.26'
+          },
+          {
+            title: '4.27打印任意一笔（联机）',
+            id: '4.27'
+          },
+          {
+            title: '4.28银联二维码',
+            id: '4.28'
+          }
+        ],
+        apiType: '请选择',
+
+        amount: undefined,
+        orderNumber: undefined,
+        isFrontCamera: true,
+        isPrintTicket: false,
+
+      },
+      methods: {
+        // ios截取参数字符串
+        GetQueryString(name) {
+          var href = decodeURI(decodeURI(window.location.search))
+          var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+          var r = href.substr(1).match(reg);
+          if (r != null) return unescape(r[2]); return null;
+        },
+        toastShow(message) {
+          this.toastMessage = message
+          setTimeout(function () {
+            app.toastMessage = ''
+          }, 2000)
+        },
+        goback() {
+          window.location.reload()
+        },
+        //针对微信浏览器兼容
+        fixScroll(div) {
+          var height = document.documentElement.scrollTop || document.body.scrollTop
+          window.scrollTo(0, div ? height : 0);
+        },
+        //原生统一回调
+        onNativeCallback(result) {
+          document.getElementById("result").innerHTML = result;
+        },
+
+        onApiChanged() {
+          switch (this.apiType) {
+            case '4.1'://签到
+              window.nativeObj.signIn();
+              break;
+            case '4.2'://签退
+              window.nativeObj.signOut();
+              break;
+            case '4.3':
+              break;
+          }
+        },
+        submit() {
+          console.log(1111);
+
+          switch (this.apiType) {
+            case '4.3':
+              alert(this.amount + this.orderNumber);
+              window.nativeObj.consume(this.amount, this.orderNumber);
+              break;
+            case '4.4':
+              window.nativeObj.alipay(this.amount, this.orderNumber, this.isFrontCamera, this.isPrintTicket);
+              break;
+          }
+
+        }
+
+      },
+      watch: {
+      },
+      computed: {
+
+      },
+      created: function () {
+        document.getElementById("app").style.display = "block"
+
+      },
+      mounted: function () {
+
+      }
+    })
+
+  </script>
+</body>
+
+</html>
